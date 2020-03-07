@@ -49,12 +49,15 @@ public class WishListManagement {
         }
         return chunk.toString();
     }
+    
+    // +* Andrew Le - commented out code involved using the MySQL database, which isn't used in the local version.
 
     /**
      * Adds a card to the wish list of the author's (player tag) wish list.
      *
      * @param event
      * @param args
+     * @param playerTag
      */
     public void add(MessageReceivedEvent event, List<String> args, String playerTag) {
         IUser author = event.getAuthor();
@@ -115,6 +118,7 @@ public class WishListManagement {
      *
      * @param event
      * @param args
+     * @param playerTag
      */
     public void delete(MessageReceivedEvent event, List<String> args, String playerTag) {
         IUser author = event.getAuthor();
@@ -156,6 +160,7 @@ public class WishListManagement {
      *
      * @param event
      * @param args
+     * @param playerTag
      */
     public void print(MessageReceivedEvent event, List<String> args, String playerTag) {
         IUser author = event.getAuthor();
@@ -189,6 +194,8 @@ public class WishListManagement {
             List<String> epicWishes = new ArrayList<>();
             List<String> legendaryWishes = new ArrayList<>();
             
+            // +* Andrew Le - any wishes that are already maxed out are added here.
+            // They are all removed from the wishlist after iteration, preventing concurrency issues.
             List<String> cardsToRemove = new ArrayList<>();
 
             String authorName = author.getName();
@@ -218,15 +225,16 @@ public class WishListManagement {
                             cardRequiredForNextLevel = "Maxed";
                             cardIsMaxed = true;
                         }
-
                         levelDisplayString = String.format("Level %d (%d/%s)", cardLevel, cardQuantity, cardRequiredForNextLevel);
                     }
                     String cardDisplayName = cardInfo.getString(CARD_NAME_KEY);
+                    // +* Andrew Le - add maxed wishes to this list, so we can remove them all later
                     if (cardIsMaxed) {
                     	cardsToRemove.add(cardDisplayName);
                     }
                     String cardKey = cardInfo.getString("key");
                     String wishRow;
+                    // +* Andrew Le - if a card is prioritized, put * next to its display on the wishlist as indication
                 	if (WisherManager.cardIsPriority(playerTag, cardDisplayName)) {
                 	    wishRow = String.format("%s ***%s** `%s`", CardEmojis.getEmoji(cardKey), cardDisplayName, levelDisplayString); // extra asterisk
                 	} else {
@@ -257,6 +265,7 @@ public class WishListManagement {
 
             }
             
+            // +* Andrew Le - remove all the maxed wishes at once
             for (String cardToRemove : cardsToRemove) {
             	WisherManager.deleteWish(playerTag, cardToRemove);
             }
@@ -282,6 +291,13 @@ public class WishListManagement {
         }
     }
     
+    /**
+     * +* Andrew Le - Makes a wish currently in the wish list a prioritized wish. (one per rarity)
+     *
+     * @param event
+     * @param args
+     * @param playerTag
+     */
     public void prioritize(MessageReceivedEvent event, List<String> args, String playerTag) {
     	IUser author = event.getAuthor();
 
@@ -303,10 +319,12 @@ public class WishListManagement {
     		return;
     	}
     	cardName = new JSONObject(cardResponse).getString("name");
+    	// Check that the card we want to prioritize is in the wishlist
     	if (!WisherManager.existsWishForAuthorByCardName(playerTag, cardName)) {
     		BotUtils.sendMessage(event.getChannel(), author.mention() + ", the card " + cardName + " is not in your wish list.");
     		return;
     	}
+    	// Check that the card we want to prioritize isn't already a priority
     	if (WisherManager.cardIsPriority(playerTag, cardName)) {
     		BotUtils.sendMessage(event.getChannel(), author.mention() + ", the card " + cardName + " is already prioritized.");
     		return;
@@ -314,7 +332,8 @@ public class WishListManagement {
 
     	JSONObject cardInfo = new JSONObject(cardResponse);
     	String rarity = cardInfo.getString("rarity");
-
+    	
+    	// We only allow one priority per rarity, so check if a priority of that rarity already exists
     	List<Wish> priorities = WisherManager.getPlayerPriorities(playerTag);
     	for (Wish priority : priorities) {
     		String otherCardName = priority.getCardName();
@@ -322,6 +341,7 @@ public class WishListManagement {
     			String otherCardResponse = ClashRoyaleAPIHelper.getCardByName(otherCardName);
     			JSONObject otherCardInfo = new JSONObject(otherCardResponse);
     			String otherRarity = otherCardInfo.getString("rarity");
+    			// If a priority of that rarity already exists, delete it. We're replacing the priority for that rarity
     			if (rarity.equals(otherRarity)) {
     				WisherManager.deletePriority(playerTag, otherCardName);
     			}
@@ -329,11 +349,18 @@ public class WishListManagement {
     			logger.error(e.getMessage(), e);
     		}
     	}
-
+    	// Finally, prioritize the wish (change its priority field to true)
     	WisherManager.addPriority(playerTag, cardName);
     	BotUtils.sendMessage(event.getChannel(), author.mention() + ", the card " + cardName + " was successfully prioritized.");
     }
     
+    /**
+     * +* Andrew Le - Makes a currently prioritized card no longer a priority.
+     *
+     * @param event
+     * @param args
+     * @param playerTag
+     */
     public void deletePriority(MessageReceivedEvent event, List<String> args, String playerTag) {
     	IUser author = event.getAuthor();
 
@@ -353,16 +380,18 @@ public class WishListManagement {
     		BotUtils.sendMessage(event.getChannel(), author.mention() + ", the card `" + cardName + "` doesn't exist.");
     		return;
     	}
+    	// Check that the card we want to deprioritize is in the wishlist
     	cardName = new JSONObject(cardResponse).getString("name");
     	if (!WisherManager.existsWishForAuthorByCardName(playerTag, cardName)) {
     		BotUtils.sendMessage(event.getChannel(), author.mention() + ", the card " + cardName + " is not in your wish list.");
     		return;
     	}
+    	// Check that the card we want to deprioritize is a priority
     	if (!WisherManager.cardIsPriority(playerTag, cardName)) {
     		BotUtils.sendMessage(event.getChannel(), author.mention() + ", the card " + cardName + " is not a priority.");
     		return;
     	}
-
+    	// Delete the priority (set priority field to false)
     	if (WisherManager.deletePriority(playerTag, cardName)) {
     		BotUtils.sendMessage(event.getChannel(), author.mention() + ", the card " + cardName + " was succesfully deprioritized.");
     	} else {

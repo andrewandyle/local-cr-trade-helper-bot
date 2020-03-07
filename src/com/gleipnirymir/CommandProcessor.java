@@ -7,6 +7,8 @@ import java.util.List;
 
 public class CommandProcessor {
 
+	// +* Andrew Le - Commented out for local version - MySQL database not being used
+	
 //    private static final Logger logger = LogManager.getLogger(CommandProcessor.class);
 //
 //    public static void setTagToPlayer(MessageReceivedEvent event, List<String> args) {
@@ -110,6 +112,8 @@ public class CommandProcessor {
     public static void addToWishList(MessageReceivedEvent event, List<String> args, String playerTag) {
         WishListManagement.getInstance().add(event, args, playerTag);
     }
+    
+    // +* Andrew Le - priority commands
     
     public static void addPriority(MessageReceivedEvent event, List<String> args, String playerTag) {
     	WishListManagement.getInstance().prioritize(event, args, playerTag);

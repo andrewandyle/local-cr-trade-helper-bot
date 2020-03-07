@@ -37,6 +37,8 @@ public class TradeCommands {
     private static final int NUMBER_THREADS = 20;
     private static final String CODE_SNIPPET = "```";
     private static final String ALL_RARITIES = "ALL";
+    
+    // +* Andrew Le - commented out code involved using the MySQL database, which isn't used in the local version.
 
     /**
      * Prints the players that have the card specified.
@@ -83,7 +85,8 @@ public class TradeCommands {
 
     		Integer minTradeQuantity = getTradeQuantity(cardRarity);
 
-    		//            List<String> clansFromFamily = BotUtils.getValidClans(event, authorClanTag, onlyMyClan);
+    		// List<String> clansFromFamily = BotUtils.getValidClans(event, authorClanTag, onlyMyClan);
+    		
     		// TODO: Make it multithreading.
 
 
@@ -659,7 +662,7 @@ public class TradeCommands {
     		JSONObject clanJson = playerInfoJson.getJSONObject("clan");
     		String authorClanTag = clanJson.getString("tag");
 
-    		//            List<String> clansFromFamily = BotUtils.getValidClans(event, authorClanTag, onlyMyClan);
+    		// List<String> clansFromFamily = BotUtils.getValidClans(event, authorClanTag, onlyMyClan);
     		// TODO: Make it multithreading.
     		// FIX: Optimization. I am going by the wishes for each clan on the list.
 

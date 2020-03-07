@@ -8,7 +8,7 @@ import sx.blah.discord.api.IDiscordClient;
 
 public class MainRunner {
 	
-	/* NOTE: This bot is no longer functional, as the API services have been discontinued.
+	/* +* Andrew Le - This bot is no longer functional, as the API services have been discontinued.
 	 * 
 	 * I have stored away my keys and migrating to a different API is a work in progress.
 	 * 

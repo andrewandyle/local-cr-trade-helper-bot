@@ -43,7 +43,9 @@ public class CardUtils {
             return Arrays.stream(values()).map(Enum::toString).toArray(String[]::new);
         }
     }
-
+    
+    // +* Andrew Le - added set of aliases for 3 new cards: elixir golem, battle healer, firecracker
+    
     private static final Set<String> ARCHERS_ALIASES = initializeSet("archers", "arch");
     private static final Set<String> ARROWS_ALIASES = initializeSet("arrows", "arrow", "arr");
     private static final Set<String> BABY_DRAGON_ALIASES = initializeSet("baby-dragon", "bbd", "babyd", "bd", "babydragon");

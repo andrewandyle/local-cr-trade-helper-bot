@@ -18,18 +18,19 @@ public class CommandHandler {
     // A static map of commands mapping from command string to the functional impl
     private static Map<String, Command> commandMap = new HashMap<>();
 
-    // Might be better practise to do this from an instantiated objects constructor
+    // Might be better practice to do this from an instantiated objects constructor
     static {
 
         commandMap.put("test", (event, args) -> BotUtils.sendMessage(event.getChannel(), "Test is working. <:think_hog:622896363608211497>"));
 
         // =================================================================
         // == Configuration
+        // +* Andrew Le - Commented out for local version - MySQL database not being used
+        // The playerTag is now passed as an argument into these commands instead of using the database
         // =================================================================
 
 //        commandMap.put("saveTag".toLowerCase(), (event, args) -> CommandProcessor.setTagToPlayer(event, args));
 //        commandMap.put("save".toLowerCase(), (event, args) -> CommandProcessor.setTagToPlayer(event, args));
-
 
         // =================================================================
         // == WishList Management
@@ -72,6 +73,10 @@ public class CommandHandler {
         	args.remove(0);
         	CommandProcessor.deleteFromWishList(event, args, playerTag);
         });
+        
+        // =================================================================
+        // +* Andrew Le - Priority commands
+        // =================================================================
         
         commandMap.put("ap", (event, args) -> {
         	String playerTag = args.get(0);
@@ -137,10 +142,12 @@ public class CommandHandler {
 
         commandMap.put("findMeTrades".toLowerCase(), (event, args) -> {
         	List<String> argsWithoutCommand = args;
+        	// +* Andrew Le - Parameter to display fmt by frequency
         	boolean byFreq = args.get(0).equals("freq");
         	if (byFreq) {
         		argsWithoutCommand.remove(0);
         	}
+        	// +* Andrew Le - Parameter to filter fmt to only give away your maxed cards
         	boolean maxOnly = args.contains("max");
         	if (maxOnly) {
         		argsWithoutCommand.remove("max");

@@ -58,6 +58,7 @@ public class WisherManager {
         save(playerTag);
     }
     
+    // +* Andrew Le - this method iterates through an entire wishlist and returns a list of the prioritized cards.
     public static List<Wish> getPlayerPriorities(String playerTag) {
     	List<Wish> wishes = getWishes(playerTag);
     	List<Wish> priorities = new ArrayList<>();
@@ -69,6 +70,7 @@ public class WisherManager {
     	return priorities;		
     }
     
+    // +* Andrew Le - this method sets the priority field of a wish to true when the addPriority command is called.
     public static void addPriority(String playerTag, String cardName) {
     	List<Wish> wishes = getWishes(playerTag);
     	Wish wish = wishes.stream().filter(w -> w.getCardName().equals(cardName)).findFirst().orElse(null);
@@ -78,6 +80,9 @@ public class WisherManager {
     	save(playerTag);
     }
     
+    // +* Andrew Le - this method sets the priority field of a prioritized wish to false
+    // This is called when the deletePriority command is called, or when addPriority is called on a wish of a rarity
+    // where there is already a priority. Only one priority is allowed per rarity.
     public static boolean deletePriority(String playerTag, String cardName) {
     	List<Wish> wishes = getWishes(playerTag);
     	Wish wish = wishes.stream().filter(w -> w.getCardName().equals(cardName)).findFirst().orElse(null);
@@ -92,6 +97,7 @@ public class WisherManager {
     	return wasPriorityRemoved;
     }
     
+    // +* Andrew Le - this method checks if a wish is a priority (in the list of player's prioritized wishes).
     public static boolean cardIsPriority(String playerTag, String cardName) {
 	    List<Wish> priorities = getPlayerPriorities(playerTag);
 	    return priorities.stream().map(Wish::getCardName).anyMatch(cardName::equals);
@@ -108,6 +114,8 @@ public class WisherManager {
                 for (Object wishObj : wishJsonArray) {
                     JSONObject wishJson = (JSONObject) wishObj;
                     Wish wish = new Wish(wishJson.getString("cardName"));
+                    // +* Andrew Le - check if priority property is null because old wishlist files didn't have this
+                    // Even if this was null from the start, the property would be initialized when writing back to the file
                     if (!wishJson.isNull("priority")) {
                 	    wish.setPriority(wishJson.getBoolean("priority"));
                 	}

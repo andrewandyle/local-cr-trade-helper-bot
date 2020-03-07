@@ -99,6 +99,7 @@ public class CardEmojis {
     private static final String EARTHQUAKE = "<:earthquake:622926835742933031>";
     private static final String GOBLIN_CAGE = "<:goblincage:622926835755384872>";
     private static final String FISHERMAN = "<:fisherman:622888002997452820>";
+    // +* Andrew Le - new cards that I've added
     private static final String ELIXIR_GOLEM = "<:elixirgolem:633056148974731305>";
     private static final String BATTLE_HEALER = "<:battlehealer:651228027522646039>";
     private static final String FIRECRACKER = "<:firecracker:662432426122805268>";
@@ -207,6 +208,7 @@ public class CardEmojis {
         emojisMap.put("earthquake", EARTHQUAKE);
         emojisMap.put("goblin-cage", GOBLIN_CAGE);
         emojisMap.put("fisherman", FISHERMAN);
+        // +* Andrew Le - new cards that I've added
         emojisMap.put("elixir-golem", ELIXIR_GOLEM);
         emojisMap.put("battle-healer", BATTLE_HEALER);
         emojisMap.put("firecracker", FIRECRACKER);
