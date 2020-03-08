@@ -135,7 +135,7 @@ public class TradeCommands {
     						}
     						if (BotUtils.isCardMaxed(memberCardInfoJson)) {
     							if (WisherManager.existsWishForAuthorByCardName(memberTag, cardDisplayName)) {
-    								System.out.println(cardDisplayName + " REMOVED in whoHas");
+    								// +* Andrew Le - maxed wishes are automatically removed
     								WisherManager.deleteWish(memberTag, cardDisplayName);
     							}
     							cardQuantity = MAXED_CARD_QUANTITY;
@@ -282,6 +282,7 @@ public class TradeCommands {
     	
     	String rarity = getRarity(args);
     	boolean getByRarity = !rarity.equals(ALL_RARITIES);
+    	// +* Andrew Le - the whoWants command included a rarity parameter, so call this method instead
     	if (getByRarity) {
     		getPlayersWishByRarity(event, args, playerTag, rarity);
     		return;
@@ -720,6 +721,7 @@ public class TradeCommands {
     				int cardLevel = cardInfo.getInt("displayLevel");
     				if (cardLevel == 13) {
     					cardIsMaxed = true;
+    					// +* Andrew Le - removed maxed wishes later, to prevent concurrency issues
     					cardsToRemove.add(wish.getCardName());
     				}
     				int cardQuantity = cardInfo.getInt("count");
@@ -732,6 +734,7 @@ public class TradeCommands {
     			String wishRow = String.format("%s **%s** `%s`", CardEmojis.getEmoji(cardKey), cardDisplayName, levelDisplayString);
     			cardTitles.put(cardDisplayName, wishRow);
     			String cardRarity = cardInfo.getString("rarity");
+    			// +* Andrew Le - only show the fmt results for prioritized cards, if there are any of that rarity
     			if (!cardIsMaxed && checkPriorities(playerTag, cardDisplayName)) {
     				switch (cardRarity) {
     				case "Common":
@@ -749,8 +752,8 @@ public class TradeCommands {
     				}
     			}
     		}
+    		// +* Andrew Le - remove maxed wishes from the current player's wishlist
     		for (String cardToRemove : cardsToRemove) {
-    			System.out.println(cardToRemove + " REMOVED in fmt");
     			WisherManager.deleteWish(playerTag, cardToRemove);
     		}
 
@@ -906,14 +909,16 @@ public class TradeCommands {
     						cardsPrinted++;
     						printedSomething = true;
     	    				StringBuilder freqView = new StringBuilder();
+    	    				// +* Andrew Le - when sorting by frequency, use functional programming
+    	    				// to order the cards from most to least wanted
     						Map<String, Integer> sortedFreq = cardsByFreq.entrySet()
     						.stream()
     						.sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
     						.collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2,
     										LinkedHashMap::new));
     						int optionsPrinted = 0;
+    						// +* Andrew Le - add the sorted list to the lines of card icons, up to 8 per line
     						for (String cardToPrint : sortedFreq.keySet()) {
-    							System.out.println(sortedFreq.get(cardToPrint) + " people want " + cardToPrint);
     							freqView.append(cardToPrint);
     							optionsPrinted++;
     		                    if (optionsPrinted % 8 == 0) {
@@ -945,6 +950,7 @@ public class TradeCommands {
     						String memberCardInfo = ClashRoyaleAPIHelper.getPlayerCardInfo(cardKey, memberInfoJson);
     						if (!memberCardInfo.isEmpty()) {
     							JSONObject memberCardInfoJson = new JSONObject(memberCardInfo);
+    							// +* Andrew Le - if wish is maxed, remove it later to prevent concurrency issues
     							if (BotUtils.isCardMaxed(memberCardInfoJson)) {
 									cardsToRemove.add(memberWish.getCardName());
 									memberHasCardMaxed = true;
@@ -964,12 +970,15 @@ public class TradeCommands {
     								if (BotUtils.isCardMaxed(authorCardInfoJson)) {
     									autorCardQuantity = MAXED_CARD_QUANTITY;
     								}
+    								// +* Andrew Le - if the player chose to filter by the maxed cards they have, then the member's wish will not show if the player doesn't have that card maxed
     								if (!memberHasCardMaxed && !WisherManager.existsWishForAuthorByCardName(playerTag, memberWish.getCardName()) && (autorCardQuantity == MAXED_CARD_QUANTITY || (!maxOnly && autorCardQuantity >= getTradeQuantity(rarityStr)))) {
+    									// +* Andrew Le - only show this wish as a fmt result if it's the other member's priority, if there are any of that rarity
     									if (checkPriorities(memberTag, memberWish.getCardName())) {
     										String cardEmoji = CardEmojis.getEmoji(cardKey) + " ";
-
+    										// +* Andrew Le - if displaying by frequency, update the frequency of the wanted card after each occurrence
     										if (byFreq) {
     											int freq = 1;
+    											// +* Andrew Le - check if the wanted card is already in the map to increment the frequency
     											if (cardsByFreq.containsKey(cardEmoji)) {
     												freq = cardsByFreq.get(cardEmoji) + 1;
     											}
@@ -984,11 +993,12 @@ public class TradeCommands {
     						}
 
     					}
+    					// +* Andrew Le - maxed wishes are automatically removed
     					for (String memberCardToRemove : memberCardsToRemove) {
     						WisherManager.deleteWish(memberTag, memberCardToRemove);
-    						System.out.println(memberCardToRemove + " REMOVED in fmt");
     					}
     				}
+    				// This represents all of the fmt results for a specific card (contained in cardList) for the default fmt
     				if (!byFreq && cardList.length() > 0) {
     					displayInfo.append("`")
     					.append(mcti.getMemberName())
@@ -1002,6 +1012,7 @@ public class TradeCommands {
     					forceBreak = true;
     				}
     			}
+    			// +* Andrew Le - same procedure as earlier when sorting by frequency
     			if (!byFreq && !cardName.isEmpty() && displayInfo.length() > 0) {
     				cardsPrinted++;
     				printedSomething = true;
@@ -1354,8 +1365,8 @@ public class TradeCommands {
                 }
                 String cardNameDisplay = playerCardJson.getString("name");
                 if (cardIsMaxed && WisherManager.existsWishForAuthorByCardName(playerTag, cardNameDisplay)) {
+                	// +* Andrew Le - maxed wishes are automatically removed
                 	WisherManager.deleteWish(playerTag, cardNameDisplay);
-                	System.out.println(cardNameDisplay + " REMOVED in mtc");
                 }
                 if ((ALL_RARITIES.equals(rarity) || rarity.equals(cardRarity)) && !WisherManager.existsWishForAuthorByCardName(playerTag, cardNameDisplay) && cardQuantity >= getTradeQuantity(cardRarity)) {
                     List<MemberCardInfo> playerCardTradeInfos = playerCardsByRarity.get(cardRarity);
@@ -1416,6 +1427,13 @@ public class TradeCommands {
         }
     }
     
+    /**
+     * +* Andrew Le - gets the wishes from everyone in the clan specified by rarity, and prints them.
+     *
+     * @param event
+     * @param args
+     * @param cardName
+     */
     public static void getPlayersWishByRarity(MessageReceivedEvent event, List<String> args, String playerTag, String rarity) {
     	Instant start = Instant.now();
     	
@@ -1477,8 +1495,10 @@ public class TradeCommands {
     	                    int cardLevel = memberCardJson.getInt("displayLevel");
     	                    
     	                    if (cardLevel == 13 && WisherManager.existsWishForAuthorByCardName(memberTag, cardNameDisplay)) {
+    	                    	// maxed wishes are automatically removed
     	                    	WisherManager.deleteWish(memberTag, cardNameDisplay);
     	                    } else if (rarity.equals(cardRarity) && WisherManager.existsWishForAuthorByCardName(memberTag, cardNameDisplay)) {
+    	                    	// only show this wish if it's a priority, if there are any of that rarity
     							if (checkPriorities(memberTag, cardNameDisplay)) {
     								List<MemberCardInfo> memberCardTradeInfos = membersCardsByRarity.get(cardRarity);
         							memberCardTradeInfos.add(new MemberCardInfoBuilder()
@@ -1682,9 +1702,11 @@ public class TradeCommands {
                         cardQuantity = memberCardInfoJson.getInt("count");
                         cardLevel = memberCardInfoJson.getInt("displayLevel");
                     }
+                    // +* Andrew Le - maxed wishes are automatically removed
                     if (cardLevel == 13 && WisherManager.existsWishForAuthorByCardName(memberTag, cardName)) {
                     	WisherManager.deleteWish(memberTag, cardName);
                     } else if (cardLevel < 13 && WisherManager.existsWishForAuthorByCardName(memberTag, cardName)) {
+                    	// +* Andrew Le - check if we should display the person by checking priorities
                     	if (checkPriorities(memberTag, cardName)) {
                     		membersWhoWantCardList.add(new MemberCardInfoBuilder()
                     				.setMemberName(memberName)
@@ -1748,13 +1770,22 @@ public class TradeCommands {
                 .append("\n");
     }
     
+    // +* Andrew Le - helper methods for priority system
     
+    /**
+     * +* Andrew Le - checks if a player has a prioritized wish of the specified rarity.
+     * If there are no priorities of a rarity, then all wishes of that rarity are displayed.
+     *
+     * @param playerTag
+     * @param rarity
+     */
     private static Wish getPrioritizedWishOfRarity(String playerTag, String rarity) {
     	List<Wish> priorities = WisherManager.getPlayerPriorities(playerTag);
     	for (Wish priority : priorities) {
     		try {
     			String cardResponse = ClashRoyaleAPIHelper.getCardByName(priority.getCardName());
     			JSONObject cardInfo = new JSONObject(cardResponse);
+    			// check if a prioritized wish of this rarity exists
     			String otherRarity = cardInfo.getString("rarity");
     			if (rarity.equals(otherRarity)) {
     				return priority;
@@ -1763,9 +1794,18 @@ public class TradeCommands {
     			logger.error(e.getMessage(), e);
     		}
     	}
-    	return null; // this is the case where a player does NOT have a prioritized card of this rarity
+    	// this is the case where a player does NOT have a prioritized card of this rarity
+    	return null;
     }
     
+    /**
+     * +* Andrew Le - determines whether or not this person should be displayed as wanting the card.
+     * This will return true if the player has no priorities of the card's rarity, or the player has
+     * the card prioritized. Returns false otherwise.
+     *
+     * @param playerTag
+     * @param cardName
+     */
     private static boolean checkPriorities(String playerTag, String cardName) {
     	String rarity = "";
     	try {
@@ -1777,12 +1817,15 @@ public class TradeCommands {
     	}
 
     	List<Wish> priorities = WisherManager.getPlayerPriorities(playerTag);
+    	// display this card if no priorities exist, or this card is the priority
     	boolean checkPriorities = priorities.isEmpty() || WisherManager.cardIsPriority(playerTag, cardName);
     	boolean otherSameRarityPriority = false;
     	if (!checkPriorities) {
     		Wish possiblePriority = getPrioritizedWishOfRarity(playerTag, rarity);
+    		// this boolean is true when another card of this rarity is a priority, so DON'T display this card
     		otherSameRarityPriority = possiblePriority != null && !possiblePriority.getCardName().equals(cardName);
     	}
+    	// display this card if there are no priorities of this rarity
     	return checkPriorities || !otherSameRarityPriority;
     }
 
